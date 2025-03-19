@@ -6,13 +6,77 @@ use tera::{Tera, Context};
 use tiny_http::{Server, Response};
 use std::io::Read;
 use clap::{Command, Arg};
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+struct PostMetadata {
+    title: String,
+    date: String,
+    author: String,
+    tags: Vec<String>,
+    summary: String,
+}
+
+fn extract_metadata(markdown: &str) -> Option<PostMetadata> {
+    if markdown.starts_with("---") {
+        let parts: Vec<&str> = markdown.splitn(3, "---").collect();
+        if parts.len() > 2 {
+            let yaml_str = parts[1].trim();
+            match serde_yaml::from_str(yaml_str) {
+                Ok(metadata) => Some(metadata),
+                Err(e) => {
+                    eprintln!("Error parsing metadata: {}", e);
+                    None
+                }
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+fn copy_directory(src: &Path, dst: &Path) -> std::io::Result<()> {
+    if !dst.exists() {
+        fs::create_dir_all(dst)?;
+    }
+
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+
+        if ty.is_dir() {
+            copy_directory(&src_path, &dst_path)?;
+        } else {
+            fs::copy(src_path, dst_path)?;
+        }
+    }
+    Ok(())
+}
+
+fn publish_site() -> std::io::Result<()> {
+    // First build the site
+    build_site();
+
+    // Then copy the style directory
+    let style_dir = Path::new("style");
+    let static_style_dir = Path::new("static/style");
+
+    println!("Copying style directory to static...");
+    copy_directory(style_dir, static_style_dir)?;
+    println!("Site published successfully!");
+    Ok(())
+}
 
 fn main() {
     let matches = Command::new("Devlift SSG")
         .arg(Arg::new("command")
             .required(true)
             .index(1)
-            .help("Command: 'build' or 'serve'"))
+            .help("Command: 'build', 'serve', or 'publish'"))
         .get_matches();
 
     match matches.get_one::<String>("command").map(|s| s.as_str()) {
@@ -24,7 +88,12 @@ fn main() {
             println!("Starting server...");
             start_server();
         }
-        _ => println!("Invalid command. Use 'build' or 'serve'."),
+        Some("publish") => {
+            if let Err(e) = publish_site() {
+                eprintln!("Error publishing site: {}", e);
+            }
+        }
+        _ => println!("Invalid command. Use 'build', 'serve', or 'publish'."),
     }
 }
 
@@ -41,16 +110,23 @@ fn build_site() {
 
         if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
             let markdown = fs::read_to_string(&path).unwrap();
-            let title = path.file_stem().unwrap().to_str().unwrap().to_owned();
-            let html_content = markdown_to_html(&markdown);
-            let html_output = markdown_to_html_with_template(&title, &html_content);
+            let metadata = extract_metadata(&markdown);
+            let html_output = markdown_to_html_with_template(&markdown, metadata.as_ref());
 
-            let output_filename = format!("{}.html", title);
+            let display_title = if let Some(meta) = &metadata {
+                meta.title.clone()
+            } else {
+                path.file_stem().unwrap().to_str().unwrap().to_owned()
+            };
+
+            // Convert spaces to hyphens in the filename
+            let safe_filename = display_title.replace(" ", "-");
+            let output_filename = format!("{}.html", safe_filename);
             let output_path = output_dir.join(&output_filename);
             let mut file = File::create(output_path).unwrap();
             file.write_all(html_output.as_bytes()).unwrap();
 
-            posts.push((title.clone(), output_filename));
+            posts.push((display_title.clone(), safe_filename, output_filename));
         }
     }
 
@@ -58,34 +134,47 @@ fn build_site() {
 }
 
 fn markdown_to_html(markdown: &str) -> String {
-    let parser = Parser::new(markdown);
+    // If the markdown starts with ---, extract only the content part
+    let content = if markdown.starts_with("---") {
+        let parts: Vec<&str> = markdown.splitn(3, "---").collect();
+        if parts.len() > 2 { parts[2] } else { markdown }
+    } else {
+        markdown
+    };
+
+    let parser = Parser::new(content.trim());
     let mut html_output = String::new();
     html::push_html(&mut html_output, parser);
     html_output
 }
 
-fn markdown_to_html_with_template(title: &str, markdown: &str) -> String {
+fn markdown_to_html_with_template(markdown: &str, metadata: Option<&PostMetadata>) -> String {
     let tera = Tera::new("templates/*.html").unwrap();
     let mut context = Context::new();
-    context.insert("title", title);
+    
+    if let Some(meta) = metadata {
+        context.insert("title", &meta.title);
+        context.insert("date", &meta.date);
+        context.insert("author", &meta.author);
+        context.insert("tags", &meta.tags);
+        context.insert("summary", &meta.summary);
+    }
+    
     context.insert("content", &markdown_to_html(markdown));
-
     tera.render("base.html", &context).unwrap()
 }
 
-fn generate_index_page(posts: &Vec<(String, String)>) {
+fn generate_index_page(posts: &Vec<(String, String, String)>) {
     let tera = Tera::new("templates/*.html").unwrap();
     let mut context = Context::new();
     
     // Convert posts into a format that Tera can iterate over
-    let posts_data: Vec<_> = posts.iter()
-        .map(|(title, link)| {
-            let mut map = std::collections::HashMap::new();
-            map.insert("title".to_string(), title.clone());
-            map.insert("link".to_string(), link.clone());
-            map
-        })
-        .collect();
+    let posts_data: Vec<_> = posts.iter().map(|(title, _, link)| {
+        let mut map = std::collections::HashMap::new();
+        map.insert("title".to_string(), title.to_string());
+        map.insert("link".to_string(), link.to_string());
+        map
+    }).collect();
     
     context.insert("posts", &posts_data);
 

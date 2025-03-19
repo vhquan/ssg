@@ -4,10 +4,65 @@ body {
     margin: auto;
     padding: 20px;
     background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+.post-metadata {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #eee;
+}
+
+.post-metadata h1 {
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.metadata {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.date {
+    margin: 0;
+    font-style: italic;
+}
+
+.author {
+    margin: 0.2rem 0;
+    font-weight: 600;
+}
+
+.tags {
+    margin: 1rem 0;
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    margin-right: 0.5rem;
+    background-color: #e9ecef;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    color: #495057;
+}
+
+.summary {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+}
+
+.summary p {
+    margin: 0;
+    font-style: italic;
 }
 
 h1 {
     text-align: center;
+    color: #2c3e50;
 }
 
 ul {
