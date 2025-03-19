@@ -169,14 +169,35 @@ fn generate_index_page(posts: &Vec<(String, String, String)>) {
     let mut context = Context::new();
     
     // Convert posts into a format that Tera can iterate over
-    let posts_data: Vec<_> = posts.iter().map(|(title, _, link)| {
-        let mut map = std::collections::HashMap::new();
-        map.insert("title".to_string(), title.to_string());
-        map.insert("link".to_string(), link.to_string());
-        map
-    }).collect();
+    let mut posts_with_metadata: Vec<_> = Vec::new();
     
-    context.insert("posts", &posts_data);
+    for entry in fs::read_dir("resources").unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        
+        if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
+            let markdown = fs::read_to_string(&path).unwrap();
+            if let Some(metadata) = extract_metadata(&markdown) {
+                let title = metadata.title;
+                let date = metadata.date;
+                let safe_filename = title.replace(" ", "-");
+                let link = format!("{}.html", safe_filename);
+                
+                let mut map = std::collections::HashMap::new();
+                map.insert("title".to_string(), title);
+                map.insert("date".to_string(), date);
+                map.insert("link".to_string(), link);
+                posts_with_metadata.push(map);
+            }
+        }
+    }
+    
+    // Sort posts by date in descending order
+    posts_with_metadata.sort_by(|a, b| {
+        b.get("date").unwrap().cmp(a.get("date").unwrap())
+    });
+    
+    context.insert("posts", &posts_with_metadata);
 
     let index_html = tera.render("index.html", &context).unwrap();
     let mut file = File::create("static/index.html").unwrap();

@@ -7,10 +7,15 @@
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
-    <h1>Welcome to Devlift Blog</h1>
-    <ul>
+    <h1>Hong Quan's Webpage</h1>
+    <h2>Posts</h2>
+    <ul class="posts-list">
         {% for post in posts %}
-        <li><a href="{{ post.link }}">{{ post.title }}</a></li>
+        <li>
+            <span class="post-date">{{ post.date }}</span>
+            <span class="post-separator">—</span>
+            <a href="{{ post.link }}" class="post-title">{{ post.title }}</a>
+        </li>
         {% endfor %}
     </ul>
 </body>
