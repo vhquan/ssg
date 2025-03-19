@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+pulldown-cmark = "0.9"  # Markdown parser
+clap = { version = "4.4", features = ["derive"] }  # CLI support
+tera = "1.19"  # Template engine
+notify = "6.1"  # Watch for file changes
+rayon = "1.8"  # Parallel processing
+tiny_http = "0.12.0"
