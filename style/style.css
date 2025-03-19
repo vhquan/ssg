@@ -128,8 +128,10 @@ h2 {
 
 .topics-list {
     display: inline-block;
+    width: 100%;
     padding: 1rem;
     border: 1px dashed #ccc;
+    border-radius: 6px;
     background-color: #f9f9f9;
 }
 
