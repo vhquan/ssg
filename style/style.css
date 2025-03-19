@@ -119,3 +119,31 @@ h2 {
 .footnote {
     text-align: center;
 }
+
+/* Topics section */
+.topics {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.topics-list {
+    display: inline-block;
+    padding: 1rem;
+    border: 1px dashed #ccc;
+    background-color: #f9f9f9;
+}
+
+.topics-list li {
+    display: inline;
+    margin: 0 0.5rem;
+}
+
+.topics-list a {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+}
+
+.topics-list a:hover {
+    color: #2c3e50;
+}

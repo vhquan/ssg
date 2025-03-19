@@ -3,28 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Index</title>
+    <title>Posts tagged with {{ tag }}</title>
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
-    <h1>Hong Quan's Webpage</h1>
-    <h2>Topics</h2>
-    <div class="topics">
-        <ul class="topics-list">
-            {% for tag in tags %}
-            <li><a href="{{ tag.link }}">{{ tag.tag }}</a></li>
-            {% endfor %}
-        </ul>
-    </div>
-    <h2>Posts</h2>
+    <h1>Posts tagged with "{{ tag }}"</h1>
     <ul class="posts-list">
         {% for post in posts %}
         <li>
             <span class="post-date">{{ post.date }}</span>
             <span class="post-separator">—</span>
-            <a href="{{ post.link }}" class="post-title">{{ post.title }}</a>
+            <a href="/{{ post.link }}" class="post-title">{{ post.title }}</a>
         </li>
         {% endfor %}
     </ul>
+    <div class="footnote">
+        <a href="/">Back to Home</a>
+    </div>
 </body>
 </html>

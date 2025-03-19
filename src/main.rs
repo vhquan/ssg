@@ -130,7 +130,7 @@ fn build_site() {
         }
     }
 
-    generate_index_page(&posts);
+    generate_index_page();
 }
 
 fn markdown_to_html(markdown: &str) -> String {
@@ -164,12 +164,13 @@ fn markdown_to_html_with_template(markdown: &str, metadata: Option<&PostMetadata
     tera.render("base.html", &context).unwrap()
 }
 
-fn generate_index_page(posts: &Vec<(String, String, String)>) {
+fn generate_index_page() {
     let tera = Tera::new("templates/*.html").unwrap();
     let mut context = Context::new();
     
     // Convert posts into a format that Tera can iterate over
     let mut posts_with_metadata: Vec<_> = Vec::new();
+    let mut tags_map: std::collections::HashMap<String, Vec<std::collections::HashMap<String, String>>> = std::collections::HashMap::new();
     
     for entry in fs::read_dir("resources").unwrap() {
         let entry = entry.unwrap();
@@ -184,10 +185,15 @@ fn generate_index_page(posts: &Vec<(String, String, String)>) {
                 let link = format!("{}.html", safe_filename);
                 
                 let mut map = std::collections::HashMap::new();
-                map.insert("title".to_string(), title);
+                map.insert("title".to_string(), title.clone());
                 map.insert("date".to_string(), date);
-                map.insert("link".to_string(), link);
-                posts_with_metadata.push(map);
+                map.insert("link".to_string(), link.clone());
+                posts_with_metadata.push(map.clone());
+
+                // Collect unique tags and map posts
+                for tag in metadata.tags {
+                    tags_map.entry(tag.clone()).or_insert_with(Vec::new).push(map.clone());
+                }
             }
         }
     }
@@ -197,11 +203,35 @@ fn generate_index_page(posts: &Vec<(String, String, String)>) {
         b.get("date").unwrap().cmp(a.get("date").unwrap())
     });
     
+    // Create tag links
+    let tags: Vec<_> = tags_map.keys().map(|tag| {
+        let mut map = std::collections::HashMap::new();
+        map.insert("tag".to_string(), tag.clone());
+        map.insert("link".to_string(), format!("tags/{}.html", tag.replace(" ", "-")));
+        map
+    }).collect();
+    
     context.insert("posts", &posts_with_metadata);
+    context.insert("tags", &tags);
 
     let index_html = tera.render("index.html", &context).unwrap();
     let mut file = File::create("static/index.html").unwrap();
     file.write_all(index_html.as_bytes()).unwrap();
+
+    // Ensure tags directory exists
+    fs::create_dir_all("static/tags").unwrap();
+
+    // Generate tag pages
+    for (tag, posts) in tags_map {
+        let mut tag_context = Context::new();
+        tag_context.insert("tag", &tag);
+        tag_context.insert("posts", &posts);
+
+        let tag_html = tera.render("tag.html", &tag_context).unwrap();
+        let tag_filename = format!("static/tags/{}.html", tag.replace(" ", "-"));
+        let mut file = File::create(tag_filename).unwrap();
+        file.write_all(tag_html.as_bytes()).unwrap();
+    }
 }
 
 fn get_content_type(path: &str) -> &'static str {
