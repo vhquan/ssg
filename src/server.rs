@@ -6,8 +6,8 @@ use tiny_http::{Server, Response};
 use crate::utils::get_content_type;
 
 pub fn start_server() {
-    let server = Server::http("127.0.0.1:8080").unwrap();
-    println!("Serving on http://127.0.0.1:8080");
+    let server = Server::http("0.0.0.0:8080").unwrap();
+    println!("Server running on port 8080 (accessible from any IP)");
 
     for request in server.incoming_requests() {
         let url = request.url();
