@@ -29,8 +29,8 @@ pub fn build_site() {
                 path.file_stem().unwrap().to_str().unwrap().to_owned()
             };
 
-            // Convert spaces to hyphens in the filename
-            let safe_filename = display_title.replace(" ", "-");
+            // Convert title to lowercase and spaces to underscores in the filename
+            let safe_filename = display_title.to_lowercase().replace(" ", "_");
             let output_filename = format!("{}.html", safe_filename);
             let output_path = output_dir.join(&output_filename);
             let mut file = File::create(output_path).unwrap();
@@ -60,7 +60,7 @@ pub fn generate_index_page() {
             if let Some(metadata) = extract_metadata(&markdown) {
                 let title = metadata.title;
                 let date = metadata.date;
-                let safe_filename = title.replace(" ", "-");
+                let safe_filename = title.to_lowercase().replace(" ", "_");
                 let link = format!("{}.html", safe_filename);
                 
                 let mut map = HashMap::new();
@@ -86,7 +86,7 @@ pub fn generate_index_page() {
     let tags: Vec<_> = tags_map.keys().map(|tag| {
         let mut map = HashMap::new();
         map.insert("tag".to_string(), tag.clone());
-        map.insert("link".to_string(), format!("tags/{}.html", tag.replace(" ", "-")));
+        map.insert("link".to_string(), format!("tags/{}.html", tag.to_lowercase().replace(" ", "_")));
         map
     }).collect();
     
