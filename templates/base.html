@@ -12,6 +12,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 1rem;
+            position: relative;
         }
         .sidebar {
             position: sticky;
@@ -20,10 +21,15 @@
             height: fit-content;
             padding: 1rem;
             border-right: 1px solid #e0e0e0;
+            background: white;
+            transition: transform 0.3s ease;
         }
         .sidebar h3 {
             margin-top: 0;
             color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .toc-nav ul {
             list-style: none;
@@ -38,6 +44,7 @@
             text-decoration: none;
             font-size: 0.9rem;
             transition: color 0.2s;
+            display: block;
         }
         .toc-nav a:hover {
             color: #000;
@@ -45,6 +52,46 @@
         .content {
             flex: 1;
             max-width: 800px;
+        }
+        .toc-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 999;
+                transform: translateX(-100%);
+                border-right: none;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .toc-toggle {
+                display: block;
+            }
+            .content {
+                max-width: 100%;
+            }
         }
     </style>
     <!-- Highlight.js for code syntax highlighting -->
@@ -59,8 +106,14 @@
 </head>
 <body>
     <div class="container">
+        <button class="toc-toggle" aria-label="Toggle table of contents">☰</button>
         <div class="sidebar" id="toc">
-            <h3>On this page</h3>
+            <h3>
+                On this page
+                <button onclick="this.closest('.sidebar').classList.remove('active')" 
+                        style="border: none; background: none; font-size: 1.2rem; cursor: pointer; padding: 0;"
+                        aria-label="Close table of contents">×</button>
+            </h3>
             <nav class="toc-nav"></nav>
         </div>
         <div class="content">
@@ -128,6 +181,21 @@
                 hljs.highlightElement(block);
             });
             generateTOC();
+
+            // Mobile TOC toggle
+            const tocToggle = document.querySelector('.toc-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            tocToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+            });
+
+            // Close TOC when clicking a link on mobile
+            document.querySelector('.toc-nav').addEventListener('click', (e) => {
+                if (window.innerWidth <= 768 && e.target.tagName === 'A') {
+                    sidebar.classList.remove('active');
+                }
+            });
         });
     </script>
 </body>
