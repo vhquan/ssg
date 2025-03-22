@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
     <link rel="stylesheet" href="/style/style.css">
+    <style>
+        .container {
+            display: flex;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .sidebar {
+            position: sticky;
+            top: 1rem;
+            width: 250px;
+            height: fit-content;
+            padding: 1rem;
+            border-right: 1px solid #e0e0e0;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .toc-nav ul {
+            list-style: none;
+            padding-left: 1rem;
+            margin: 0;
+        }
+        .toc-nav li {
+            margin: 0.5rem 0;
+        }
+        .toc-nav a {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .toc-nav a:hover {
+            color: #000;
+        }
+        .content {
+            flex: 1;
+            max-width: 800px;
+        }
+    </style>
     <!-- Highlight.js for code syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
@@ -16,7 +58,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
 </head>
 <body>
-    <div class="content">
+    <div class="container">
+        <div class="sidebar" id="toc">
+            <h3>On this page</h3>
+            <nav class="toc-nav"></nav>
+        </div>
+        <div class="content">
         {% if author is defined %}
         <div class="post-metadata">
             <h1>{{ title }}</h1>
@@ -41,15 +88,46 @@
         
         {{ content | safe }}
     </div>
+    </div>
     <div class="footnote">
         <a href="/">Back to Home</a>
     </div>
     <script>
+        // Generate table of contents
+        function generateTOC() {
+            const content = document.querySelector('.content');
+            const toc = document.querySelector('.toc-nav');
+            const headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            
+            if (headings.length === 0) {
+                document.querySelector('.sidebar').style.display = 'none';
+                return;
+            }
+
+            const ul = document.createElement('ul');
+            headings.forEach((heading, index) => {
+                // Add ID to heading if it doesn't have one
+                if (!heading.id) {
+                    heading.id = `heading-${index}`;
+                }
+
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `#${heading.id}`;
+                a.textContent = heading.textContent;
+                a.style.paddingLeft = `${(parseInt(heading.tagName[1]) - 1) * 0.5}rem`;
+                li.appendChild(a);
+                ul.appendChild(li);
+            });
+            toc.appendChild(ul);
+        }
+
         // Initialize syntax highlighting
         document.addEventListener('DOMContentLoaded', (event) => {
             document.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
+            generateTOC();
         });
     </script>
 </body>
