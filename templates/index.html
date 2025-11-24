@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hong Quan's Index</title>
+    <title>Systems & Thoughts</title>
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
-    <h1>Hong Quan's Webpage</h1>
-    <h2>Topics</h2>
+    <h1>Systems & Thoughts — by Quan</h1>
+    <p style="font-style: italic; color: #555; margin-top: -10px;">
+    Exploring the order behind life and ideas, as Solomon sought wisdom in all things.
+    </p>
+    <!-- <h2>Topics</h2> -->
     <div class="topics">
         <ul class="topics-list">
             {% for tag in tags %}
@@ -16,7 +19,7 @@
             {% endfor %}
         </ul>
     </div>
-    <h2>Posts</h2>
+    <!-- <h2>Posts</h2> -->
     <ul class="posts-list">
         {% for post in posts %}
         <li>
@@ -26,5 +29,8 @@
         </li>
         {% endfor %}
     </ul>
+    <footer style="position:fixed; bottom:0; width:100%; text-align:center; font-size:0.9em; background:#f9f9f9; padding:0.5em 0;">
+    &copy; by Quan
+    </footer>
 </body>
 </html>
